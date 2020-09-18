@@ -3,6 +3,21 @@ import { DIST } from './common-paths';
 import commonLoaders from './common-loaders';
 import webpack from 'webpack';
 import { Configuration } from 'webpack-dev-server';
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+const tsLoader = {
+  loader: 'ts-loader',
+  options: {
+    transpileOnly: true,
+    // experimentalWatchApi: true,
+    // allowTsInNodeModules: true,
+    // this overrides the specified properties in tsconfig.json
+    compilerOptions: {
+      // setting as CommonJS prevented webpack code splitting
+      module: 'esnext',
+      sourceMap: true,
+    },
+  },
+};
 
 const devConfig: webpack.Configuration = {
   mode: 'development',
@@ -14,7 +29,8 @@ const devConfig: webpack.Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
-        loaders: [
+        exclude: /node_modules/,
+        use: [
           {
             loader: 'babel-loader',
             options: {
@@ -24,19 +40,26 @@ const devConfig: webpack.Configuration = {
               ],
             },
           },
+          tsLoader,
         ],
       },
       {
         test: /\.((c|sa|sc)ss)$/i,
+        exclude: /node_modules/,
         use: [
           // style-loader only in development
-          'style-loader',
+          {
+            loader: 'style-loader',
+            options: {
+              esModule: true,
+            },
+          },
           ...commonLoaders,
         ],
       },
     ],
   },
-  plugins: [new ReactRefreshWebpackPlugin()],
+  plugins: [new ForkTsCheckerWebpackPlugin(), new ReactRefreshWebpackPlugin()],
   devServer: {
     contentBase: DIST,
     compress: true,

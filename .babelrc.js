@@ -6,8 +6,14 @@ export default (api) => {
   return {
     presets: [
       '@babel/preset-env',
-      '@babel/preset-react',
-      '@babel/preset-typescript',
+      ['@babel/preset-react', { modules: false }],
+      [
+        '@babel/preset-typescript',
+        {
+          // this is important for proper files watching
+          onlyRemoveTypeImports: true,
+        },
+      ],
     ],
     plugins: [
       // // Applies the react-refresh Babel plugin on non-production modes only

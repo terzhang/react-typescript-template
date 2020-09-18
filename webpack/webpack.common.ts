@@ -1,11 +1,25 @@
 import webpack from 'webpack';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+// import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+// import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import { ROOT, SRC, DIST } from './common-paths';
+
+const tsLoader = {
+  loader: 'ts-loader',
+  options: {
+    transpileOnly: true,
+    // experimentalWatchApi: true,
+    // allowTsInNodeModules: true,
+    // this overrides the specified properties in tsconfig.json
+    compilerOptions: {
+      // setting as CommonJS prevented webpack code splitting
+      module: 'esnext',
+      sourceMap: true,
+    },
+  },
+};
 
 // see here on how to split config between dev and prod builds
 // https://webpack.js.org/guides/environment-variables/
@@ -17,30 +31,44 @@ const webpackConfig: webpack.Configuration = {
     publicPath: '/',
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.json', '.svg', '.scss'],
   },
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        loaders: [
-          { loader: 'babel-loader' },
+        test: /\.(webm|mp4|gifv?)$/,
+        exclude: /node_modules/,
+        use: [
           {
-            loader: 'ts-loader',
-            options: {
-              transpileOnly: true,
-              experimentalWatchApi: true,
-              allowTsInNodeModules: true,
-              // this overrides the specified properties in tsconfig.json
-              compilerOptions: {
-                // setting as CommonJS prevented webpack code splitting
-                module: 'esnext',
-                sourceMap: true,
-              },
-            },
+            loader: 'file-loader',
           },
         ],
+      },
+      // config for ts(x)/js(x) using svgr
+      {
+        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+        issuer: {
+          test: /\.tsx?$/,
+        },
+        use: [
+          'babel-loader',
+          {
+            loader: '@svgr/webpack',
+            options: {
+              // typescript: false,
+              babel: false,
+            },
+          },
+          'url-loader',
+        ],
+      },
+      {
+        test: /\.tsx?$/,
         exclude: /node_modules/,
+        use: [
+          // { loader: 'babel-loader' },
+          tsLoader,
+        ],
       },
       {
         test: /\.jsx?$/,
@@ -48,34 +76,20 @@ const webpackConfig: webpack.Configuration = {
         use: ['babel-loader'],
       },
       {
-        test: /\/fonts\/.*\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'file-loader?name=fonts/[hash].[ext]',
-      },
-      {
-        test: [/\/images\/.*\.svg$/, /@coreui\/icons/],
-        loader: 'svg-react-loader',
-      },
-      {
-        test: /\.(png|jpg|gif)$/,
-        use: ['file-loader'],
-      },
-      {
         test: /\.mjs$/,
         type: 'javascript/auto',
+      },
+      // everything else that uses svgr
+      {
+        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+        loader: 'url-loader',
       },
     ],
   },
   plugins: [
-    // prevent file hashes changing unexpectedly
-    new CleanWebpackPlugin(),
-    new MiniCssExtractPlugin({
-      filename: '[name].[contenthash].css',
-      chunkFilename: '[name].[contenthash].css',
-    }),
     new HtmlWebpackPlugin({
       template: SRC + '/index.html',
     }),
-    new ForkTsCheckerWebpackPlugin(),
   ],
 
   optimization: {

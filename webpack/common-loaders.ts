@@ -7,18 +7,31 @@ const loaders = [
       // If you need run `sass-loader` and `postcss-loader` on each CSS `@import` please set it to `2`
       importLoaders: 2,
       // Automatically enable css modules for files satisfying `/\.module\.\w+$/i` RegExp.
-      modules: { auto: true },
+      modules: {
+        compileType: 'module',
+        mode: 'local',
+        auto: true,
+        exportGlobals: true,
+        localIdentName: '[local]__[hash:base64:5]',
+        // namedExport: true,
+        exportLocalsConvention: 'camelCase',
+        exportOnlyLocals: false,
+      },
     },
   },
   {
     loader: 'postcss-loader',
     options: {
-      ident: 'postcss',
-      plugins: () => [require('autoprefixer')],
+      postcssOptions: {
+        plugins: ['autoprefixer'],
+      },
     },
   },
   {
     loader: 'sass-loader',
+    options: {
+      implementation: require('sass'),
+    },
   },
 ];
 

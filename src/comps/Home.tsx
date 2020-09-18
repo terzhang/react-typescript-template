@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Home = () => {
-  return <div>Terry Zhang</div>;
+  return <div>React TypeScript Template</div>;
 };
 
 export default Home;
